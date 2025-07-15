@@ -1,5 +1,5 @@
 import axios from 'axios'
-const baseUrl = '/api/notes'
+const baseUrl = '/api/notes' //removed localhost thingy so that frontend can work both locally and in production
 
 const getAll = () => {
     const request = axios.get(baseUrl)
