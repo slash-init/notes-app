@@ -2,6 +2,7 @@ const express = require('express')
 const app = express()
 const cors = require('cors') //cors - cross origin resource sharing
 
+app.use(express.static('dist')) //to show frontend static website on deployment
 app.use(cors())
 let notes = [
   {
