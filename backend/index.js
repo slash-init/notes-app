@@ -28,10 +28,18 @@ app.get('/api/notes', (request, response) => {
   })
 })
 // for a particular note
-app.get('/api/notes/:id', (request, response) => {
-  Note.findById(request.params.id).then(note => {
-    response.json(note)
-  })
+app.get('/api/notes/:id', (request, response, next) => {
+  Note.findById(request.params.id)
+    .then(note => {
+
+      if (note) {
+        response.json(note)
+      } else {
+        response.status(404).end()
+      }
+    })
+
+    .catch(error => next(error)) //next->middleware control function
 })
 
 app.delete('/api/notes/:id', (request, response) => {
@@ -58,19 +66,31 @@ app.post('/api/notes', (request, response) => {
   })
 })
 
-app.put('/api/notes/:id', (request, response) => {
-  const id = request.params.id
-  const body = request.body
+app.put('/api/notes/:id', (request, response, next) => {
+  const { content, important } = request.body
 
-  const note = notes.find(note => note.id === id)
-  if (!note) {
-    return response.status(404).json({ error: 'note not found' })
-  }
+  Note.findById(request.params.id)
+    .then(note => {
+      if (!note) {
+        return response.status(404).end()
+      }
 
-  const updatedNote = { ...note, content: body.content, important: body.important }
-  notes = notes.map(n => n.id !== id ? n : updatedNote)
+      note.content = content
+      note.important = important
 
-  response.json(updatedNote)
+      return note.save().then((updatedNote) => {
+        response.json(updatedNote)
+      })
+    })
+    .catch(error => next(error))
+})
+
+app.delete('/api/notes/:id', (request, response, next) => {
+  Note.findByIdAndDelete(request.params.id)
+    .then(result => {
+      response.status(204).end()
+    })
+    .catch(error => next(error))
 })
 //middleware for catching unkown endpoints requests
 const unknownEndpoint = (request, response) => {
@@ -78,6 +98,19 @@ const unknownEndpoint = (request, response) => {
 }
 
 app.use(unknownEndpoint)
+
+const errorHandler = (error, request, response, next) => {
+  console.error(error.message)
+
+  if (error.name === 'CastError') {
+    return response.status(400).send({ error: 'malformatted id' })
+  } 
+
+  next(error)
+}
+
+// this has to be the last loaded middleware, also all the routes should be registered before this!
+app.use(errorHandler)
 
 const PORT = process.env.PORT
 app.listen(PORT, () => {
