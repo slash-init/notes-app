@@ -42,14 +42,14 @@ app.get('/api/notes/:id', (request, response, next) => {
     .catch(error => next(error)) //next->middleware control function
 })
 
-app.delete('/api/notes/:id', (request, response) => {
-  const id = request.params.id
-  notes = notes.filter(note => note.id !== id)
+// app.delete('/api/notes/:id', (request, response) => {
+//   const id = request.params.id
+//   notes = notes.filter(note => note.id !== id)
 
-  response.status(204).end()
-})
+//   response.status(204).end()
+// })
 
-app.post('/api/notes', (request, response) => {
+app.post('/api/notes', (request, response, next) => {
   const body = request.body
 
   if (!body.content) {
@@ -64,6 +64,7 @@ app.post('/api/notes', (request, response) => {
   note.save().then(savedNote => {
     response.json(savedNote)
   })
+    .catch(error => next(error))
 })
 
 app.put('/api/notes/:id', (request, response, next) => {
@@ -99,14 +100,18 @@ const unknownEndpoint = (request, response) => {
 
 app.use(unknownEndpoint)
 
+// Error handler middleware: checks for 'CastError' which means an invalid MongoDB ObjectId
 const errorHandler = (error, request, response, next) => {
   console.error(error.message)
 
   if (error.name === 'CastError') {
     return response.status(400).send({ error: 'malformatted id' })
-  } 
+  }
+  else if (error.name === 'ValidationError') { //if our request content doesnt meet schema requirements it throws validation error
+    return response.status(400).json({error : error.message})
+  }
 
-  next(error)
+  next(error) //passing on to express's default error handler
 }
 
 // this has to be the last loaded middleware, also all the routes should be registered before this!
