@@ -3,6 +3,7 @@ require('dotenv').config()
 const express = require('express')
 const app = express()
 const Note = require('./models/note')
+const path = require('path')
 
 app.use(express.static('dist')) //to show frontend static website on deployment
 
@@ -18,9 +19,9 @@ const requestLogger = (request, response, next) => {
 app.use(express.json())
 app.use(requestLogger)
 
-app.get('/', (request, response) => {
-  response.send('<h1>Hello World!</h1>')
-})
+// app.get('/', (request, response) => {
+//   response.send('<h1>Hello World!</h1>')
+// })
 //for all
 app.get('/api/notes', (request, response) => {
   Note.find({}).then(notes => {
@@ -93,12 +94,18 @@ app.delete('/api/notes/:id', (request, response, next) => {
     })
     .catch(error => next(error))
 })
-//middleware for catching unkown endpoints requests
-const unknownEndpoint = (request, response) => {
-  response.status(404).send({ error: 'unknown endpoint' })
-}
 
-app.use(unknownEndpoint)
+// ✅ SIMPLER VERSION: Serve index.html for any non-API route
+app.get(/^(?!\/api).*/, (request, response) => {
+  response.sendFile(path.join(__dirname, 'dist', 'index.html'))
+})
+
+//middleware for catching unkown endpoints requests
+// const unknownEndpoint = (request, response) => {
+//   response.status(404).send({ error: 'unknown endpoint' })
+// }
+
+// app.use(unknownEndpoint)
 
 // Error handler middleware: checks for 'CastError' which means an invalid MongoDB ObjectId
 const errorHandler = (error, request, response, next) => {
@@ -116,6 +123,8 @@ const errorHandler = (error, request, response, next) => {
 
 // this has to be the last loaded middleware, also all the routes should be registered before this!
 app.use(errorHandler)
+
+
 
 const PORT = process.env.PORT
 app.listen(PORT, () => {
