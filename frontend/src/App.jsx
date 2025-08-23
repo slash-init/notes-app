@@ -2,6 +2,10 @@ import Note from './components/Note'
 import { useState, useEffect } from 'react'
 import noteService from './services/notes'
 import Footer from './components/Footer'
+import { Routes, Route, Link } from 'react-router-dom'
+import About from './components/About'
+import Social from './components/Social'
+import NotFound from './components/NotFound'
 
 const Notification = ({ message }) => {
   if (message === null) {
@@ -26,7 +30,8 @@ const App = (props) => {
     const changedNote = { ...note, important: !note.important }
 
     noteService
-      .update(id, changedNote).then(returnedNote => {
+      .update(id, changedNote)
+      .then(returnedNote => {
         setNotes(notes.map(note => note.id !== id ? note : returnedNote))
       })
       .catch(error => {
@@ -89,10 +94,8 @@ const App = (props) => {
         setNewNote('')
       })
       .catch(error => {
-        setErrorMessage('Failed to add note. Please try again.')
-        setTimeout(() => {
-          setErrorMessage(null)
-        }, 5000)
+        setErrorMessage('Failed to create note')
+        setTimeout(() => setErrorMessage(null), 5000)
       })
   }
   
@@ -110,48 +113,68 @@ const App = (props) => {
 
   return (
     <div className="app-container">
-      <h1>Notes</h1>
-      
-      <Notification message={errorMessage} />
-      
-      <div className="controls">
-        <button className="toggle-btn" onClick={() => setShowAll(!showAll)}>
-          show {showAll ? 'important' : 'all'}
-        </button>
-      </div>
-      
-      {notesToShow.length === 0 ? (
-        <div className="empty-state">
-          <p>No notes to display</p>
+      {/* Add navigation */}
+      <nav className="nav-bar">
+        <h1>Notes</h1>
+        <div className="nav-links">
+          <Link to="/" className="nav-link">Notes</Link>
+          <Link to="/about" className="nav-link">About</Link>
+          <Link to="/social" className="nav-link">Social</Link>
         </div>
-      ) : (
-        <ul className="notes-list">
-          {notesToShow.map(note =>
-            <Note 
-              key={note.id} 
-              note={note} 
-              toggleImportance={() => toggleImportanceOf(note.id)}
-              deleteNote={() => deleteNote(note.id)} 
-            />
-          )}
-        </ul>
-      )}
+      </nav>
       
-      <div className="note-form">
-        <form onSubmit={addNote}>
-          <div className="form-row">
-            <input 
-              className="note-input"
-              value={newNote}
-              onChange={handleNoteChange}
-              placeholder="Add a new note..."
-            />
-            <button className="submit-btn" type="submit">
-              Save
-            </button>
+      <Routes>
+        <Route path="/" element={
+          <div>
+            <Notification message={errorMessage} />
+            
+            <div className="controls">
+              <button className="toggle-btn" onClick={() => setShowAll(!showAll)}>
+                show {showAll ? 'important' : 'all'}
+              </button>
+            </div>
+            
+            {notesToShow.length === 0 ? (
+              <div className="empty-state">
+                <p>No notes to display</p>
+              </div>
+            ) : (
+              <ul className="notes-list">
+                {notesToShow.map(note =>
+                  <Note 
+                    key={note.id} 
+                    note={note} 
+                    toggleImportance={() => toggleImportanceOf(note.id)}
+                    deleteNote={() => deleteNote(note.id)} 
+                  />
+                )}
+              </ul>
+            )}
+            
+            <div className="note-form">
+              <form onSubmit={addNote}>
+                <div className="form-row">
+                  <input 
+                    className="note-input"
+                    value={newNote}
+                    onChange={handleNoteChange}
+                    placeholder="Add a new note..."
+                  />
+                  <button className="submit-btn" type="submit">
+                    Save
+                  </button>
+                </div>
+              </form>
+            </div>
           </div>
-        </form>
-      </div>
+        } />
+        
+        <Route path="/about" element={<About />} />
+        <Route path="/social" element={<Social />} />
+        
+        {/* ADD 404 ROUTE */}
+        <Route path="*" element={<NotFound />} />
+      </Routes>
       
       <Footer />
     </div>
