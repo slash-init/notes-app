@@ -23,6 +23,10 @@ const noteSchema = new mongoose.Schema({
   },
 
   important: Boolean,
+  user: {
+    type: mongoose.Schema.Types.ObjectId, //declares field's data type as an ObjectId (MongoDB's 12-byte identifier)
+    ref: 'User'
+  }
 })
 
 noteSchema.set('toJSON', {

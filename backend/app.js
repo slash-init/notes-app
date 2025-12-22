@@ -4,6 +4,8 @@ const config = require('./utils/config')
 const logger = require('./utils/logger')
 const middleware = require('./utils/middleware')
 const notesRouter = require('./controllers/notes')
+const usersRouter = require('./controllers/users')
+const loginRouter = require('./controllers/login')
 
 const app = express()
 
@@ -31,6 +33,8 @@ app.use(middleware.requestLogger)
 
 // All routes related to notes are handled by notesRouter, prefixed with /api/notes
 app.use('/api/notes', notesRouter)
+app.use('/api/users', usersRouter)
+app.use('/api/login', loginRouter)
 
 // Handle requests to unknown endpoints (404 error)
 app.use(middleware.unknownEndpoint)
